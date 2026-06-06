@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دليل Laravel + Nginx على Ubuntu VPS</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg2: #161b22;
+    --bg3: #1c2128;
+    --border: #30363d;
+    --gold: #f0b429;
+    --gold2: #e09d1a;
+    --green: #3fb950;
+    --blue: #58a6ff;
+    --purple: #bc8cff;
+    --red: #ff7b72;
+    --orange: #ffa657;
+    --cyan: #39d353;
+    --text: #e6edf3;
+    --text2: #8b949e;
+    --comment: #6e7681;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 15px;
+    line-height: 1.8;
+    direction: rtl;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    background: linear-gradient(135deg, #0d1117 0%, #1a2332 50%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(240,180,41,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .header-badge {
+    display: inline-block;
+    background: rgba(240,180,41,0.1);
+    border: 1px solid rgba(240,180,41,0.3);
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 16px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+  }
+
+  .header h1 {
+    font-size: 38px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  .header h1 span { color: var(--gold); }
+
+  .header p {
+    color: var(--text2);
+    font-size: 16px;
+    max-width: 600px;
+    margin: 0 auto 30px;
+  }
+
+  .header-stack {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .stack-tag {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 18px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .stack-tag.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(240,180,41,0.08);
+  }
+
+  /* ===== TOC ===== */
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px 35px;
+    margin: 40px auto;
+    max-width: 900px;
+  }
+
+  .toc-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc ol {
+    list-style: none;
+    columns: 2;
+    gap: 20px;
+  }
+
+  .toc ol li {
+    padding: 5px 0;
+    counter-increment: toc;
+  }
+
+  .toc ol li a {
+    color: var(--text2);
+    text-decoration: none;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: color 0.2s;
+  }
+
+  .toc ol li a:hover { color: var(--gold); }
+
+  .toc ol li a::before {
+    content: counter(toc, decimal-leading-zero);
+    color: var(--comment);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    min-width: 28px;
+  }
+
+  /* ===== CONTENT ===== */
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 30px 80px;
+  }
+
+  /* ===== SECTION ===== */
+  .section {
+    margin-bottom: 60px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 30px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    background: var(--gold);
+    color: #0d1117;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .section-desc {
+    font-size: 13px;
+    color: var(--text2);
+    margin-top: 3px;
+  }
+
+  /* ===== EXPLANATION ===== */
+  .explain-block {
+    margin-bottom: 28px;
+  }
+
+  .explain-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .explain-title::before {
+    content: '⬡';
+    color: var(--gold);
+    font-size: 12px;
+  }
+
+  .explain-text {
+    color: var(--text2);
+    font-size: 14.5px;
+    line-height: 1.9;
+    padding-right: 20px;
+    border-right: 2px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .explain-text strong { color: var(--text); }
+
+  /* ===== LINE EXPLANATIONS ===== */
+  .line-explain {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .line-explain-header {
+    background: var(--bg3);
+    padding: 10px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--orange);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .line-explain-header span { color: var(--comment); font-size: 11px; }
+
+  .line-explain-body {
+    padding: 12px 18px;
+    color: var(--text2);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .line-explain-body code {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+  }
+
+  /* ===== CODE BLOCK ===== */
+  .code-wrapper {
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin: 16px 0 28px;
+    direction: ltr;
+  }
+
+  .code-header {
+    background: var(--bg3);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .code-dots {
+    display: flex;
+    gap: 5px;
+  }
+
+  .code-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .dot-red { background: #ff5f57; }
+  .dot-yellow { background: #febc2e; }
+  .dot-green { background: #28c840; }
+
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text2);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 10px;
+    border-radius: 4px;
+  }
+
+  .copy-btn {
+    background: rgba(240,180,41,0.1);
+    border: 1px solid rgba(240,180,41,0.3);
+    color: var(--gold);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    transition: all 0.2s;
+    direction: rtl;
+  }
+
+  .copy-btn:hover {
+    background: rgba(240,180,41,0.2);
+    border-color: var(--gold);
+  }
+
+  .copy-btn.copied {
+    background: rgba(63,185,80,0.15);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  pre {
+    background: #0d1117;
+    padding: 22px 24px;
+    overflow-x: auto;
+    margin: 0;
+  }
+
+  code.block {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.8;
+    white-space: pre;
+  }
+
+  /* Syntax Highlighting */
+  .kw   { color: #ff7b72; }   /* keywords: apt, sudo, nano */
+  .cmd  { color: #79c0ff; }   /* commands */
+  .str  { color: #a5d6ff; }   /* strings */
+  .cmt  { color: #6e7681; font-style: italic; }   /* comments */
+  .val  { color: #ffa657; }   /* values */
+  .opt  { color: #d2a8ff; }   /* options/flags */
+  .path { color: #7ee787; }   /* paths */
+  .var  { color: #f0b429; }   /* variables */
+  .num  { color: #79c0ff; }   /* numbers */
+  .prop { color: #ffa657; }   /* ini/nginx properties */
+  .pval { color: #a5d6ff; }   /* ini/nginx values */
+  .php-kw { color: #ff7b72; } /* PHP keywords */
+
+  /* ===== ALERT BOXES ===== */
+  .alert {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    border-right: 3px solid;
+  }
+
+  .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 2px; }
+
+  .alert.warning {
+    background: rgba(255,166,87,0.08);
+    border-color: var(--orange);
+    color: var(--orange);
+  }
+
+  .alert.info {
+    background: rgba(88,166,255,0.08);
+    border-color: var(--blue);
+    color: var(--blue);
+  }
+
+  .alert.success {
+    background: rgba(63,185,80,0.08);
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  .alert.danger {
+    background: rgba(255,123,114,0.08);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
+  /* ===== SUMMARY TABLE ===== */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .summary-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .summary-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .summary-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  .summary-desc {
+    color: var(--text2);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  /* ===== DIVIDER ===== */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 50px 0;
+  }
+
+  /* ===== PRINT ===== */
+  @media print {
+    body { background: white; color: #111; }
+    pre { background: #f5f5f5; }
+    .copy-btn { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <div class="header-badge">دليل احترافي شامل</div>
+  <h1>إعداد بيئة <span>Laravel + Nginx</span><br>على Ubuntu VPS</h1>
+  <p>دليل مفصّل خطوة بخطوة مع شرح كل سطر وإعدادات احترافية جاهزة للإنتاج</p>
+  <div class="header-stack">
+    <span class="stack-tag active">Ubuntu 22.04</span>
+    <span class="stack-tag active">Nginx</span>
+    <span class="stack-tag active">PHP 8.3</span>
+    <span class="stack-tag active">MySQL 8.0</span>
+    <span class="stack-tag active">Laravel 11</span>
+    <span class="stack-tag">Redis</span>
+    <span class="stack-tag">Supervisor</span>
+    <span class="stack-tag">SSL/HTTPS</span>
+  </div>
+</div>
+
+<!-- ===== TOC ===== -->
+<div class="toc" style="max-width:900px; margin:40px auto;">
+  <div class="toc-title">📋 فهرس المحتوى</div>
+  <ol style="counter-reset: toc;">
+    <li><a href="#s1">تحديث النظام والحزم الأساسية</a></li>
+    <li><a href="#s2">تثبيت PHP 8.3 وإضافاته</a></li>
+    <li><a href="#s3">إعداد PHP-FPM احترافياً</a></li>
+    <li><a href="#s4">تثبيت وتأمين MySQL 8.0</a></li>
+    <li><a href="#s5">تثبيت وإعداد Nginx</a></li>
+    <li><a href="#s6">Virtual Host لمشروع Laravel</a></li>
+    <li><a href="#s7">تثبيت Composer</a></li>
+    <li><a href="#s8">رفع وإعداد مشروع Laravel</a></li>
+    <li><a href="#s9">الصلاحيات الصحيحة</a></li>
+    <li><a href="#s10">تثبيت SSL مع Certbot</a></li>
+    <li><a href="#s11">إعداد Firewall</a></li>
+    <li><a href="#s12">تثبيت Redis</a></li>
+    <li><a href="#s13">Supervisor لـ Queue Workers</a></li>
+    <li><a href="#s14">التحقق النهائي</a></li>
+  </ol>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="container">
+
+  <!-- ======================== SECTION 1 ======================== -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <div>
+        <div class="section-title">تحديث النظام والحزم الأساسية</div>
+        <div class="section-desc">أول خطوة دائماً قبل أي تثبيت</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">شرح الأوامر</div>
+      <div class="explain-text">
+        قبل أي شيء، نحتاج نضمن أن النظام محدّث بالكامل وأن لدينا الأدوات الأساسية. إذا ثبّتنا أي حزمة على نظام قديم ممكن نواجه تعارضات أو مشاكل في التوافق.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">apt update && apt upgrade -y <span>— السطر الأول</span></div>
+      <div class="line-explain-body">
+        <code>apt update</code> يجلب قائمة الحزم المحدّثة من الإنترنت دون تثبيت شيء بعد. ثم <code>apt upgrade -y</code> يثبّت التحديثات المتاحة مباشرة دون طلب تأكيد. الـ <code>&&</code> تعني "نفّذ الثاني فقط إذا نجح الأول".
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">apt install -y curl wget git unzip zip software-properties-common <span>— السطر الثاني</span></div>
+      <div class="line-explain-body">
+        <code>curl</code> و<code>wget</code> لتحميل الملفات. <code>git</code> لاستنساخ المشاريع. <code>unzip/zip</code> لفك الضغط. <code>software-properties-common</code> يسمح لنا بإضافة مستودعات خارجية مثل مستودع PHP لاحقاً.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># تحديث قائمة الحزم وترقية النظام</span>
+<span class="cmd">apt</span> <span class="kw">update</span> && <span class="cmd">apt</span> <span class="kw">upgrade</span> <span class="opt">-y</span>
+
+<span class="cmt"># تثبيت الأدوات الأساسية</span>
+<span class="cmd">apt</span> <span class="kw">install</span> <span class="opt">-y</span> <span class="val">curl wget git unzip zip software-properties-common</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 2 ======================== -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <div>
+        <div class="section-title">تثبيت PHP 8.3 وجميع الإضافات</div>
+        <div class="section-desc">المحرك الأساسي لتشغيل Laravel</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">لماذا نضيف مستودعاً خارجياً؟</div>
+      <div class="explain-text">
+        Ubuntu الافتراضي يأتي بإصدار PHP قديم. مستودع <strong>ondrej/php</strong> هو المصدر الرسمي والموثوق لآخر إصدارات PHP على Ubuntu، ويدعمه المجتمع على نطاق واسع.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">add-apt-repository ppa:ondrej/php -y <span>— إضافة المستودع</span></div>
+      <div class="line-explain-body">يضيف مستودع Ondrej Surý الذي يحتوي على أحدث إصدارات PHP. بدونه ستحصل على PHP 7.x القديمة. الـ <code>-y</code> للموافقة التلقائية.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">php8.3-fpm <span>— أهم مكوّن</span></div>
+      <div class="line-explain-body">
+        FPM تعني <strong>FastCGI Process Manager</strong>، هو الذي يتواصل مع Nginx لمعالجة ملفات PHP. بدونه، Nginx لا يعرف كيف يشغّل PHP.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">قائمة الإضافات المطلوبة <span>— لماذا كل إضافة؟</span></div>
+      <div class="line-explain-body">
+        <code>php8.3-mysql</code> للتواصل مع قاعدة البيانات ← <code>php8.3-mbstring</code> لدعم Unicode والعربية ← <code>php8.3-xml</code> لمعالجة XML ← <code>php8.3-bcmath</code> للعمليات الحسابية الدقيقة (مهم للمدفوعات) ← <code>php8.3-curl</code> لإرسال HTTP requests ← <code>php8.3-zip</code> للضغط وفك الضغط ← <code>php8.3-gd</code> لمعالجة الصور ← <code>php8.3-opcache</code> لتسريع PHP بشكل كبير.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># إضافة مستودع PHP الرسمي</span>
+<span class="cmd">add-apt-repository</span> <span class="val">ppa:ondrej/php</span> <span class="opt">-y</span>
+<span class="cmd">apt</span> <span class="kw">update</span>
+
+<span class="cmt"># تثبيت PHP 8.3 مع جميع الإضافات المطلوبة لـ Laravel</span>
+<span class="cmd">apt</span> <span class="kw">install</span> <span class="opt">-y</span> <span class="val">php8.3 php8.3-fpm php8.3-cli</span> \
+  <span class="val">php8.3-mysql php8.3-pgsql php8.3-sqlite3</span> \
+  <span class="val">php8.3-mbstring php8.3-xml php8.3-bcmath</span> \
+  <span class="val">php8.3-curl php8.3-zip php8.3-gd php8.3-intl</span> \
+  <span class="val">php8.3-redis php8.3-imagick php8.3-opcache</span> \
+  <span class="val">php8.3-tokenizer php8.3-fileinfo</span>
+
+<span class="cmt"># التحقق من نجاح التثبيت</span>
+<span class="cmd">php</span> <span class="opt">-v</span>
+<span class="cmd">php-fpm8.3</span> <span class="opt">-v</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 3 ======================== -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <div>
+        <div class="section-title">إعداد PHP-FPM احترافياً</div>
+        <div class="section-desc">ضبط الذاكرة والأداء والأمان</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">php.ini — الإعدادات الرئيسية</div>
+      <div class="explain-text">
+        هذا الملف يتحكم في كيفية عمل PHP بالكامل. الإعدادات الافتراضية مناسبة للتطوير لكن <strong>ليست آمنة للإنتاج</strong>. سنعدّل كل قيمة بسبب محدد.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">memory_limit = 256M</div>
+      <div class="line-explain-body">الحد الأقصى للذاكرة لكل طلب PHP. الافتراضي 128M قد لا يكفي لـ Laravel مع Composer والعمليات الثقيلة. 256M مناسب لمعظم المشاريع.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">expose_php = Off</div>
+      <div class="line-explain-body">يمنع PHP من إرسال نسخته في HTTP headers. هذا أمان مهم — المهاجمون يستخدمون معرفة الإصدار لاستغلال ثغرات معروفة.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">display_errors = Off + log_errors = On</div>
+      <div class="line-explain-body">في الإنتاج، لا تعرض الأخطاء للمستخدم (قد تكشف معلومات حساسة)، بل سجّلها في ملف اللوق فقط للمطوّر.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">opcache.enable = 1</div>
+      <div class="line-explain-body">OPcache يخزّن الكود المُترجَم في الذاكرة، فبدلاً من تفسير PHP من جديد مع كل طلب، يُشغّل النسخة المُجمَّعة مسبقاً. هذا يسرّع التطبيق بنسبة 50-80%.</div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash — فتح ملف الإعدادات</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmd">nano</span> <span class="path">/etc/php/8.3/fpm/php.ini</span></code></pre>
+    </div>
+
+    <div class="explain-text" style="margin-bottom:12px;">ابحث عن هذه الإعدادات وعدّلها (استخدم Ctrl+W للبحث في nano):</div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">php.ini</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt">; ===== الأداء والذاكرة =====</span>
+<span class="prop">memory_limit</span> <span class="val">= 256M</span>             <span class="cmt">; حد الذاكرة لكل طلب</span>
+<span class="prop">max_execution_time</span> <span class="val">= 120</span>        <span class="cmt">; أقصى وقت تنفيذ بالثواني</span>
+<span class="prop">max_input_time</span> <span class="val">= 60</span>            <span class="cmt">; وقت قراءة البيانات المدخلة</span>
+
+<span class="cmt">; ===== رفع الملفات =====</span>
+<span class="prop">upload_max_filesize</span> <span class="val">= 64M</span>       <span class="cmt">; أقصى حجم ملف مرفوع</span>
+<span class="prop">post_max_size</span> <span class="val">= 64M</span>             <span class="cmt">; يجب أن يكون مساوياً أو أكبر من السابق</span>
+<span class="prop">max_file_uploads</span> <span class="val">= 20</span>          <span class="cmt">; أقصى عدد ملفات في طلب واحد</span>
+
+<span class="cmt">; ===== الأمان =====</span>
+<span class="prop">expose_php</span> <span class="val">= Off</span>              <span class="cmt">; إخفاء إصدار PHP من الـ headers</span>
+<span class="prop">display_errors</span> <span class="val">= Off</span>           <span class="cmt">; لا تعرض الأخطاء للمستخدم</span>
+<span class="prop">log_errors</span> <span class="val">= On</span>               <span class="cmt">; سجّل الأخطاء في الملف</span>
+<span class="prop">error_log</span> <span class="val">= /var/log/php8.3-error.log</span>
+
+<span class="cmt">; ===== OPcache - تسريع PHP =====</span>
+<span class="prop">opcache.enable</span> <span class="val">= 1</span>
+<span class="prop">opcache.memory_consumption</span> <span class="val">= 128</span>
+<span class="prop">opcache.interned_strings_buffer</span> <span class="val">= 16</span>
+<span class="prop">opcache.max_accelerated_files</span> <span class="val">= 10000</span>
+<span class="prop">opcache.revalidate_freq</span> <span class="val">= 2</span>
+<span class="prop">opcache.fast_shutdown</span> <span class="val">= 1</span></code></pre>
+    </div>
+
+    <div class="explain-block" style="margin-top:24px;">
+      <div class="explain-title">www.conf — إعداد PHP-FPM Pool</div>
+      <div class="explain-text">
+        الـ Pool هو مجموعة العمليات التي تعالج طلبات PHP. <strong>dynamic</strong> تعني أن عدد العمليات يتكيّف مع الضغط — يبدأ بعدد صغير ويكبر عند الحاجة، وهذا أفضل للـ VPS لأنه يوفر الذاكرة.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">listen = /run/php/php8.3-fpm.sock</div>
+      <div class="line-explain-body">Nginx و PHP-FPM يتواصلان عبر ملف Socket بدلاً من TCP/IP، هذا أسرع بكثير لأنه يتجنب overhead الشبكة على نفس الجهاز.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">pm.max_children = 20</div>
+      <div class="line-explain-body">أقصى عدد عمليات PHP تعمل بالتوازي. احسبها هكذا: (ذاكرة VPS - 512MB للنظام) ÷ 30MB لكل عملية. مثلاً 2GB RAM: (2048 - 512) ÷ 30 ≈ 51، لكن 20 كافٍ للبداية.</div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash — فتح ملف Pool</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmd">nano</span> <span class="path">/etc/php/8.3/fpm/pool.d/www.conf</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">www.conf</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="val">[www]</span>
+<span class="prop">user</span> <span class="val">= www-data</span>                   <span class="cmt">; المستخدم الذي يشغّل PHP-FPM</span>
+<span class="prop">group</span> <span class="val">= www-data</span>                  <span class="cmt">; المجموعة - نفس مستخدم Nginx</span>
+<span class="prop">listen</span> <span class="val">= /run/php/php8.3-fpm.sock</span> <span class="cmt">; مسار ملف Socket</span>
+<span class="prop">listen.owner</span> <span class="val">= www-data</span>
+<span class="prop">listen.group</span> <span class="val">= www-data</span>
+<span class="prop">listen.mode</span> <span class="val">= 0660</span>
+
+<span class="cmt">; إدارة العمليات - dynamic أفضل للـ VPS</span>
+<span class="prop">pm</span> <span class="val">= dynamic</span>                      <span class="cmt">; يتكيّف مع الحمل تلقائياً</span>
+<span class="prop">pm.max_children</span> <span class="val">= 20</span>             <span class="cmt">; أقصى عدد عمليات متزامنة</span>
+<span class="prop">pm.start_servers</span> <span class="val">= 4</span>             <span class="cmt">; عدد العمليات عند البدء</span>
+<span class="prop">pm.min_spare_servers</span> <span class="val">= 2</span>         <span class="cmt">; الحد الأدنى للعمليات الخاملة</span>
+<span class="prop">pm.max_spare_servers</span> <span class="val">= 6</span>         <span class="cmt">; الحد الأقصى للعمليات الخاملة</span>
+<span class="prop">pm.max_requests</span> <span class="val">= 500</span>           <span class="cmt">; إعادة تشغيل العملية بعد 500 طلب لمنع تسريب الذاكرة</span>
+
+<span class="prop">request_terminate_timeout</span> <span class="val">= 120</span>  <span class="cmt">; إنهاء الطلب بعد 120 ثانية</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash — تشغيل PHP-FPM</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmd">systemctl</span> <span class="kw">restart</span> <span class="val">php8.3-fpm</span>
+<span class="cmd">systemctl</span> <span class="kw">enable</span> <span class="val">php8.3-fpm</span>  <span class="cmt">; يعمل تلقائياً عند إعادة تشغيل السيرفر</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 4 ======================== -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <div>
+        <div class="section-title">تثبيت وتأمين MySQL 8.0</div>
+        <div class="section-desc">قاعدة البيانات الرئيسية للمشروع</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">لماذا نأمّن MySQL؟</div>
+      <div class="explain-text">
+        التثبيت الافتراضي لـ MySQL يأتي ببعض الإعدادات غير الآمنة: مستخدمون مجهولون، قاعدة بيانات test، إمكانية تسجيل الدخول بـ root من الخارج. أداة <strong>mysql_secure_installation</strong> تحل كل هذا بسؤال واحد تلو الآخر.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">CREATE DATABASE ... CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci</div>
+      <div class="line-explain-body">
+        <code>utf8mb4</code> هو الترميز الصحيح الذي يدعم العربية والإيموجي. الـ <code>utf8</code> القديم لا يدعم كل Unicode. <code>unicode_ci</code> يعني المقارنة غير حساسة لحالة الأحرف.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">لماذا ننشئ مستخدماً خاصاً وليس نستخدم root؟</div>
+      <div class="line-explain-body">
+        أمان أساسي: إذا اخترق أحد تطبيقك وحصل على بيانات الاتصال بقاعدة البيانات، لن يستطيع الوصول إلا لقاعدة بيانات مشروعك فقط، وليس كل قواعد البيانات على السيرفر.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># تثبيت MySQL</span>
+<span class="cmd">apt</span> <span class="kw">install</span> <span class="opt">-y</span> <span class="val">mysql-server mysql-client</span>
+<span class="cmd">systemctl</span> <span class="kw">start</span> <span class="val">mysql</span>
+<span class="cmd">systemctl</span> <span class="kw">enable</span> <span class="val">mysql</span>
+
+<span class="cmt"># تشغيل أداة التأمين التفاعلية</span>
+<span class="cmd">mysql_secure_installation</span></code></pre>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">ℹ️</span>
+      <div>في أداة التأمين: اختر VALIDATE PASSWORD → Level <strong>2</strong> (Strong) ← Remove anonymous users: <strong>Y</strong> ← Disallow root login remotely: <strong>Y</strong> ← Remove test database: <strong>Y</strong> ← Reload privileges: <strong>Y</strong></div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">SQL — إنشاء قاعدة البيانات والمستخدم</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt">-- الدخول لـ MySQL</span>
+<span class="cmt">-- في terminal اكتب أولاً: mysql -u root -p</span>
+
+<span class="cmt">-- إنشاء قاعدة البيانات مع الترميز الصحيح للعربية</span>
+<span class="kw">CREATE DATABASE</span> <span class="val">laravel_db</span> <span class="kw">CHARACTER SET</span> <span class="val">utf8mb4</span> <span class="kw">COLLATE</span> <span class="val">utf8mb4_unicode_ci</span>;
+
+<span class="cmt">-- إنشاء مستخدم مخصص للمشروع (لا تستخدم root أبداً)</span>
+<span class="kw">CREATE USER</span> <span class="str">'laravel_user'</span>@<span class="str">'localhost'</span> <span class="kw">IDENTIFIED BY</span> <span class="str">'StrongPassword@2024'</span>;
+
+<span class="cmt">-- منح الصلاحيات لقاعدة البيانات فقط</span>
+<span class="kw">GRANT ALL PRIVILEGES ON</span> <span class="val">laravel_db</span>.* <span class="kw">TO</span> <span class="str">'laravel_user'</span>@<span class="str">'localhost'</span>;
+
+<span class="cmt">-- تحديث جدول الصلاحيات فوراً</span>
+<span class="kw">FLUSH PRIVILEGES</span>;
+<span class="kw">EXIT</span>;</code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 5 ======================== -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <div>
+        <div class="section-title">تثبيت وإعداد Nginx</div>
+        <div class="section-desc">الـ Web Server الرئيسي</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">nginx.conf — الإعدادات الرئيسية</div>
+      <div class="explain-text">
+        هذا الملف يتحكم في سلوك Nginx بالكامل. كل إعداد له تأثير مباشر على الأداء والأمان. سنشرح أهم الإعدادات.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">worker_processes auto</div>
+      <div class="line-explain-body">يجعل Nginx يكتشف عدد CPU cores تلقائياً وينشئ عملية لكل core. هذا يستغل كامل قدرة المعالج.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">worker_rlimit_nofile 65535</div>
+      <div class="line-explain-body">أقصى عدد ملفات مفتوحة في نفس الوقت. كل اتصال يفتح ملفاً، لذا هذا الرقم يحدد أقصى عدد اتصالات متزامنة.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">server_tokens off</div>
+      <div class="line-explain-body">يخفي رقم إصدار Nginx من HTTP headers ورسائل الخطأ. أمان مهم لإخفاء معلومات عن المهاجمين.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">gzip on — وإعداداته</div>
+      <div class="line-explain-body">
+        يضغط الاستجابات قبل إرسالها للمتصفح. CSS وJS والـ JSON تصغر 60-80% بالضغط، مما يسرّع التحميل بشكل كبير. <code>gzip_comp_level 6</code> هو توازن جيد بين الضغط واستهلاك المعالج.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">limit_req_zone — Rate Limiting</div>
+      <div class="line-explain-body">
+        يقيّد عدد الطلبات من نفس الـ IP. <code>rate=30r/s</code> تعني 30 طلب في الثانية. هذا يحمي من هجمات DDoS وbrute force. الـ <code>10m</code> هو حجم الذاكرة المخصصة لتتبع الـ IPs (10MB تتسع لـ 160,000 IP).
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># تثبيت Nginx</span>
+<span class="cmd">apt</span> <span class="kw">install</span> <span class="opt">-y</span> <span class="val">nginx</span>
+<span class="cmd">systemctl</span> <span class="kw">start</span> <span class="val">nginx</span>
+<span class="cmd">systemctl</span> <span class="kw">enable</span> <span class="val">nginx</span>
+
+<span class="cmt"># فتح ملف الإعداد الرئيسي</span>
+<span class="cmd">nano</span> <span class="path">/etc/nginx/nginx.conf</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">nginx.conf</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="prop">user</span> <span class="val">www-data</span>;                    <span class="cmt"># المستخدم الذي يشغّل Nginx</span>
+<span class="prop">worker_processes</span> <span class="val">auto</span>;            <span class="cmt"># عملية لكل CPU core تلقائياً</span>
+<span class="prop">worker_rlimit_nofile</span> <span class="val">65535</span>;       <span class="cmt"># أقصى ملفات مفتوحة = أقصى اتصالات</span>
+<span class="prop">pid</span> <span class="path">/run/nginx.pid</span>;
+
+<span class="kw">events</span> {
+    <span class="prop">worker_connections</span> <span class="val">1024</span>;       <span class="cmt"># اتصالات لكل عملية</span>
+    <span class="prop">multi_accept</span> <span class="val">on</span>;              <span class="cmt"># قبول عدة اتصالات في وقت واحد</span>
+    <span class="prop">use</span> <span class="val">epoll</span>;                     <span class="cmt"># أفضل آلية للـ Linux</span>
+}
+
+<span class="kw">http</span> {
+    <span class="cmt"># الأساسيات</span>
+    <span class="prop">sendfile</span> <span class="val">on</span>;                   <span class="cmt"># إرسال الملفات مباشرة من kernel</span>
+    <span class="prop">tcp_nopush</span> <span class="val">on</span>;                 <span class="cmt"># تجميع البيانات قبل الإرسال</span>
+    <span class="prop">tcp_nodelay</span> <span class="val">on</span>;                <span class="cmt"># إرسال فوري للبيانات الصغيرة</span>
+    <span class="prop">keepalive_timeout</span> <span class="val">65</span>;          <span class="cmt"># إبقاء الاتصال مفتوحاً 65 ثانية</span>
+    <span class="prop">server_tokens</span> <span class="val">off</span>;             <span class="cmt"># إخفاء إصدار Nginx - أمان</span>
+
+    <span class="prop">include</span> <span class="path">/etc/nginx/mime.types</span>;
+    <span class="prop">default_type</span> <span class="val">application/octet-stream</span>;
+
+    <span class="cmt"># ===== الضغط - يقلل حجم الاستجابة 60-80% =====</span>
+    <span class="prop">gzip</span> <span class="val">on</span>;
+    <span class="prop">gzip_vary</span> <span class="val">on</span>;                   <span class="cmt"># يخبر الـ CDN أن الاستجابة مضغوطة</span>
+    <span class="prop">gzip_proxied</span> <span class="val">any</span>;
+    <span class="prop">gzip_comp_level</span> <span class="val">6</span>;              <span class="cmt"># مستوى الضغط 1-9 (6 = توازن مثالي)</span>
+    <span class="prop">gzip_min_length</span> <span class="val">1024</span>;           <span class="cmt"># لا تضغط الملفات الصغيرة جداً</span>
+    <span class="prop">gzip_types</span>
+        <span class="val">text/plain text/css text/xml text/javascript</span>
+        <span class="val">application/json application/javascript</span>
+        <span class="val">application/xml+rss image/svg+xml</span>;
+
+    <span class="cmt"># ===== Logs =====</span>
+    <span class="prop">access_log</span> <span class="path">/var/log/nginx/access.log</span>;
+    <span class="prop">error_log</span>  <span class="path">/var/log/nginx/error.log</span> <span class="val">warn</span>;
+
+    <span class="cmt"># ===== حجم الطلبات =====</span>
+    <span class="prop">client_max_body_size</span> <span class="val">64M</span>;       <span class="cmt"># أقصى حجم للـ request body</span>
+    <span class="prop">client_body_buffer_size</span> <span class="val">128k</span>;
+
+    <span class="cmt"># ===== Rate Limiting - حماية من DDoS والـ brute force =====</span>
+    <span class="prop">limit_req_zone</span> <span class="val">$binary_remote_addr</span> <span class="kw">zone</span>=<span class="val">general:10m</span> <span class="kw">rate</span>=<span class="val">30r/s</span>;
+    <span class="prop">limit_conn_zone</span> <span class="val">$binary_remote_addr</span> <span class="kw">zone</span>=<span class="val">addr:10m</span>;
+
+    <span class="prop">include</span> <span class="path">/etc/nginx/conf.d/*.conf</span>;
+    <span class="prop">include</span> <span class="path">/etc/nginx/sites-enabled/*</span>;
+}</code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 6 ======================== -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <div>
+        <div class="section-title">Virtual Host لمشروع Laravel</div>
+        <div class="section-desc">إعداد Nginx الخاص بموقعك</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">لماذا root يشير لـ /public فقط؟</div>
+      <div class="explain-text">
+        Laravel يضع كل الكود الحساس خارج مجلد public. إذا عيّنت root على مجلد المشروع كله، يمكن للزوار الوصول لملف <strong>.env</strong> والكود المصدري مباشرة. المجلد <strong>public</strong> هو الشيء الوحيد المسموح للعالم الخارجي رؤيته.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">try_files $uri $uri/ /index.php?$query_string</div>
+      <div class="line-explain-body">
+        هذا هو قلب إعداد Laravel مع Nginx. يبحث أولاً عن ملف حقيقي بهذا الاسم، ثم مجلد، ثم يرسل الطلب لـ <code>index.php</code> ليعالجه Laravel. هذا ما يجعل الـ routes تعمل.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">fastcgi_pass unix:/run/php/php8.3-fpm.sock</div>
+      <div class="line-explain-body">
+        يوجّه ملفات PHP لـ PHP-FPM عبر الـ Socket الذي أعددناه سابقاً. هذا هو الجسر بين Nginx وPHP.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">expires 1y + Cache-Control public, immutable</div>
+      <div class="line-explain-body">
+        الملفات الثابتة (CSS/JS/Images) لا تتغير كثيراً. نطلب من المتصفح تخزينها لسنة كاملة. عند تغييرها، Laravel يضيف version hash في اسم الملف تلقائياً فيجبر المتصفح على تحميل النسخة الجديدة.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">location ~ /\. { deny all; }</div>
+      <div class="line-explain-body">
+        يمنع الوصول لأي ملف يبدأ بنقطة مثل <code>.env</code> و<code>.git</code> و<code>.htaccess</code>. هذا أمان حرج — ملف .env يحتوي كلمات مرور قاعدة البيانات.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash — إنشاء ملف الموقع</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmd">nano</span> <span class="path">/etc/nginx/sites-available/laravel</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">nginx — Virtual Host</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="kw">server</span> {
+    <span class="prop">listen</span> <span class="val">80</span>;
+    <span class="prop">listen</span> <span class="val">[::]:80</span>;                       <span class="cmt"># يدعم IPv6 أيضاً</span>
+    <span class="prop">server_name</span> <span class="val">yourdomain.com www.yourdomain.com</span>;
+
+    <span class="cmt"># مجلد public فقط هو المكشوف - أمان مهم</span>
+    <span class="prop">root</span> <span class="path">/var/www/laravel/public</span>;
+    <span class="prop">index</span> <span class="val">index.php index.html</span>;
+
+    <span class="cmt"># ملفات log مستقلة لكل موقع</span>
+    <span class="prop">access_log</span> <span class="path">/var/log/nginx/laravel_access.log</span>;
+    <span class="prop">error_log</span>  <span class="path">/var/log/nginx/laravel_error.log</span>;
+
+    <span class="cmt"># قلب إعداد Laravel - يوجّه كل الطلبات لـ index.php</span>
+    <span class="kw">location</span> / {
+        <span class="prop">try_files</span> <span class="val">$uri $uri/ /index.php?$query_string</span>;
+    }
+
+    <span class="cmt"># معالجة ملفات PHP عبر PHP-FPM</span>
+    <span class="kw">location</span> ~ <span class="val">\.php$</span> {
+        <span class="prop">include</span> <span class="val">snippets/fastcgi-php.conf</span>;
+        <span class="prop">fastcgi_pass</span> <span class="val">unix:/run/php/php8.3-fpm.sock</span>;
+        <span class="prop">fastcgi_param</span> <span class="val">SCRIPT_FILENAME $realpath_root$fastcgi_script_name</span>;
+        <span class="prop">include</span> <span class="val">fastcgi_params</span>;
+
+        <span class="cmt"># Timeouts للطلبات الثقيلة</span>
+        <span class="prop">fastcgi_connect_timeout</span> <span class="val">60s</span>;
+        <span class="prop">fastcgi_send_timeout</span> <span class="val">120s</span>;
+        <span class="prop">fastcgi_read_timeout</span> <span class="val">120s</span>;
+        <span class="prop">fastcgi_buffer_size</span> <span class="val">64k</span>;
+        <span class="prop">fastcgi_buffers</span> <span class="val">8 64k</span>;
+    }
+
+    <span class="cmt"># الملفات الثابتة - Cache سنة كاملة لتسريع التحميل</span>
+    <span class="kw">location</span> ~* <span class="val">\.(jpg|jpeg|png|gif|ico|css|js|woff|woff2|ttf|svg|webp)$</span> {
+        <span class="prop">expires</span> <span class="val">1y</span>;
+        <span class="prop">add_header</span> <span class="val">Cache-Control "public, immutable"</span>;
+        <span class="prop">access_log</span> <span class="val">off</span>;                    <span class="cmt"># لا نسجّل طلبات الصور لتوفير مساحة</span>
+    }
+
+    <span class="cmt"># حظر الوصول لملفات .env و .git وغيرها - أمان حرج</span>
+    <span class="kw">location</span> ~ <span class="val">/\.</span> {
+        <span class="prop">deny</span> <span class="val">all</span>;
+        <span class="prop">access_log</span> <span class="val">off</span>;
+    }
+
+    <span class="cmt"># حظر الوصول للملفات الحساسة مباشرة</span>
+    <span class="kw">location</span> ~ <span class="val">/(\.env|composer\.(json|lock)|package\.json|artisan)</span> {
+        <span class="prop">deny</span> <span class="val">all</span>;
+    }
+
+    <span class="cmt"># Rate Limiting - 50 طلب burst لكل IP</span>
+    <span class="prop">limit_req</span> <span class="kw">zone</span>=<span class="val">general</span> <span class="kw">burst</span>=<span class="val">50</span> <span class="val">nodelay</span>;
+    <span class="prop">limit_conn</span> <span class="val">addr 20</span>;                    <span class="cmt"># أقصى 20 اتصال متزامن لكل IP</span>
+
+    <span class="cmt"># Security Headers - يحمي من هجمات XSS وClickjacking</span>
+    <span class="prop">add_header</span> <span class="val">X-Frame-Options "SAMEORIGIN" always</span>;
+    <span class="prop">add_header</span> <span class="val">X-XSS-Protection "1; mode=block" always</span>;
+    <span class="prop">add_header</span> <span class="val">X-Content-Type-Options "nosniff" always</span>;
+    <span class="prop">add_header</span> <span class="val">Referrer-Policy "strict-origin-when-cross-origin" always</span>;
+}</code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash — تفعيل الموقع</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># ربط الملف في sites-enabled</span>
+<span class="cmd">ln</span> <span class="opt">-s</span> <span class="path">/etc/nginx/sites-available/laravel</span> <span class="path">/etc/nginx/sites-enabled/</span>
+
+<span class="cmt"># حذف الموقع الافتراضي</span>
+<span class="cmd">rm</span> <span class="path">/etc/nginx/sites-enabled/default</span>
+
+<span class="cmt"># اختبار صحة الإعدادات قبل التطبيق</span>
+<span class="cmd">nginx</span> <span class="opt">-t</span>
+
+<span class="cmt"># تطبيق الإعدادات بدون إيقاف السيرفر</span>
+<span class="cmd">systemctl</span> <span class="kw">reload</span> <span class="val">nginx</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 7 ======================== -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <div>
+        <div class="section-title">تثبيت Composer</div>
+        <div class="section-desc">مدير حزم PHP</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">ما هو Composer؟</div>
+      <div class="explain-text">
+        Composer هو مدير الحزم الرسمي لـ PHP، مثل npm لـ Node.js. Laravel وكل إضافاته تُثبَّت عبره. نحمّله من الموقع الرسمي ونضعه في مسار عام ليكون متاحاً من أي مكان.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">mv composer.phar /usr/local/bin/composer</div>
+      <div class="line-explain-body">
+        نحرّك الملف لـ <code>/usr/local/bin</code> حتى يمكن استدعاؤه بكتابة <code>composer</code> فقط من أي مجلد بدلاً من <code>php composer.phar</code> الطويلة.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># تحميل Composer من الموقع الرسمي</span>
+<span class="cmd">curl</span> <span class="opt">-sS</span> <span class="val">https://getcomposer.org/installer</span> | <span class="cmd">php</span>
+
+<span class="cmt"># نقله لمسار عام ليكون متاحاً من أي مكان</span>
+<span class="cmd">mv</span> <span class="val">composer.phar</span> <span class="path">/usr/local/bin/composer</span>
+
+<span class="cmt"># إعطاؤه صلاحية التنفيذ</span>
+<span class="cmd">chmod</span> <span class="opt">+x</span> <span class="path">/usr/local/bin/composer</span>
+
+<span class="cmt"># التحقق من التثبيت</span>
+<span class="cmd">composer</span> <span class="opt">--version</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 8 ======================== -->
+  <div class="section" id="s8">
+    <div class="section-header">
+      <div class="section-num">08</div>
+      <div>
+        <div class="section-title">رفع وإعداد مشروع Laravel</div>
+        <div class="section-desc">نشر المشروع وإعداد بيئة الإنتاج</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">أوامر تحسين الأداء للإنتاج</div>
+      <div class="explain-text">
+        Laravel في وضع التطوير يقرأ الإعدادات والـ routes من الملفات مع كل طلب. في الإنتاج نقوم بـ "cache" لهذه الملفات ليحملها Laravel مرة واحدة فقط، مما يسرّع التطبيق بشكل ملحوظ.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">php artisan key:generate</div>
+      <div class="line-explain-body">ينشئ مفتاح تشفير عشوائي يُستخدم لتشفير الـ sessions والـ cookies. بدونه Laravel يرفض العمل في الإنتاج. يُكتب في APP_KEY في ملف .env.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">php artisan config:cache + route:cache + view:cache</div>
+      <div class="line-explain-body">
+        <code>config:cache</code> يجمع كل ملفات الإعداد في ملف واحد محسوب مسبقاً. <code>route:cache</code> يجمع كل الـ routes في ملف PHP واحد بدلاً من قراءتها كل طلب. <code>view:cache</code> يُجمِّع قوالب Blade مسبقاً. كل هذا يقلل وقت الاستجابة.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">php artisan storage:link</div>
+      <div class="line-explain-body">
+        ينشئ رابط رمزي من <code>public/storage</code> إلى <code>storage/app/public</code> حتى يمكن عرض الملفات المرفوعة (الصور وغيرها) في المتصفح مباشرة.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># إنشاء المجلد</span>
+<span class="cmd">mkdir</span> <span class="opt">-p</span> <span class="path">/var/www/laravel</span>
+
+<span class="cmt"># خيار 1: استنساخ مشروع موجود من Git</span>
+<span class="cmd">git</span> <span class="kw">clone</span> <span class="val">https://github.com/yourusername/your-project.git</span> <span class="path">/var/www/laravel</span>
+
+<span class="cmt"># خيار 2: إنشاء مشروع Laravel جديد</span>
+<span class="cmd">composer</span> <span class="kw">create-project</span> <span class="val">laravel/laravel</span> <span class="path">/var/www/laravel</span>
+
+<span class="cmt"># الانتقال للمجلد</span>
+<span class="cmd">cd</span> <span class="path">/var/www/laravel</span>
+
+<span class="cmt"># إذا كان مشروع موجود من Git، ثبّت الحزم</span>
+<span class="cmd">composer</span> <span class="kw">install</span> <span class="opt">--no-dev --optimize-autoloader</span>
+
+<span class="cmt"># نسخ ملف البيئة</span>
+<span class="cmd">cp</span> <span class="val">.env.example</span> <span class="val">.env</span>
+<span class="cmd">nano</span> <span class="val">.env</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">.env — إعدادات البيئة</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="prop">APP_NAME</span>=<span class="str">"اسم مشروعك"</span>
+<span class="prop">APP_ENV</span>=<span class="val">production</span>             <span class="cmt"># وضع الإنتاج - مهم</span>
+<span class="prop">APP_KEY</span>=                         <span class="cmt"># سيُملأ تلقائياً بأمر key:generate</span>
+<span class="prop">APP_DEBUG</span>=<span class="val">false</span>               <span class="cmt"># أطفئ Debug في الإنتاج - أمان</span>
+<span class="prop">APP_URL</span>=<span class="str">https://yourdomain.com</span>
+
+<span class="prop">LOG_CHANNEL</span>=<span class="val">stack</span>
+<span class="prop">LOG_LEVEL</span>=<span class="val">error</span>               <span class="cmt"># سجّل الأخطاء فقط لتوفير المساحة</span>
+
+<span class="cmt"># ===== قاعدة البيانات =====</span>
+<span class="prop">DB_CONNECTION</span>=<span class="val">mysql</span>
+<span class="prop">DB_HOST</span>=<span class="val">127.0.0.1</span>
+<span class="prop">DB_PORT</span>=<span class="val">3306</span>
+<span class="prop">DB_DATABASE</span>=<span class="val">laravel_db</span>
+<span class="prop">DB_USERNAME</span>=<span class="val">laravel_user</span>
+<span class="prop">DB_PASSWORD</span>=<span class="val">StrongPassword@2024</span>
+
+<span class="cmt"># ===== Cache والـ Session =====</span>
+<span class="prop">CACHE_DRIVER</span>=<span class="val">file</span>             <span class="cmt"># غيّره لـ redis إذا ثبّتت Redis</span>
+<span class="prop">SESSION_DRIVER</span>=<span class="val">file</span>          <span class="cmt"># غيّره لـ redis إذا ثبّتت Redis</span>
+<span class="prop">QUEUE_CONNECTION</span>=<span class="val">sync</span>        <span class="cmt"># غيّره لـ database أو redis للـ queues</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash — إكمال إعداد Laravel</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># توليد مفتاح التشفير - ضروري</span>
+<span class="cmd">php</span> <span class="val">artisan</span> <span class="kw">key:generate</span>
+
+<span class="cmt"># تشغيل الـ migrations لإنشاء جداول قاعدة البيانات</span>
+<span class="cmd">php</span> <span class="val">artisan</span> <span class="kw">migrate</span> <span class="opt">--force</span>
+
+<span class="cmt"># ===== تحسين الأداء للإنتاج =====</span>
+<span class="cmd">php</span> <span class="val">artisan</span> <span class="kw">config:cache</span>      <span class="cmt"># تجميع ملفات الإعداد في ملف واحد</span>
+<span class="cmd">php</span> <span class="val">artisan</span> <span class="kw">route:cache</span>       <span class="cmt"># تجميع الـ routes في ملف واحد</span>
+<span class="cmd">php</span> <span class="val">artisan</span> <span class="kw">view:cache</span>        <span class="cmt"># تجميع قوالب Blade مسبقاً</span>
+<span class="cmd">php</span> <span class="val">artisan</span> <span class="kw">event:cache</span>       <span class="cmt"># تجميع الـ events والـ listeners</span>
+
+<span class="cmt"># إنشاء رابط Storage لعرض الملفات المرفوعة</span>
+<span class="cmd">php</span> <span class="val">artisan</span> <span class="kw">storage:link</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 9 ======================== -->
+  <div class="section" id="s9">
+    <div class="section-header">
+      <div class="section-num">09</div>
+      <div>
+        <div class="section-title">الصلاحيات الصحيحة</div>
+        <div class="section-desc">توازن بين الأمان وإمكانية الكتابة</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">لماذا هذه الصلاحيات بالذات؟</div>
+      <div class="explain-text">
+        الصلاحيات الخاطئة إما تمنع التطبيق من العمل (too restrictive) أو تفتح ثغرات أمنية (too permissive). المبدأ: <strong>www-data يملك الملفات ويقرأها، ولا يكتب إلا في storage وbootstrap/cache</strong>.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">chown -R www-data:www-data</div>
+      <div class="line-explain-body">
+        Nginx وPHP-FPM يعملان كمستخدم <code>www-data</code>. إذا كان مالك الملفات شخصاً آخر، ستحصل على أخطاء "Permission denied". هذا يجعل PHP قادراً على قراءة كل الملفات.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">644 للملفات / 755 للمجلدات</div>
+      <div class="line-explain-body">
+        <code>644</code> تعني: المالك يقرأ ويكتب، الجميع يقرأ فقط. <code>755</code> للمجلدات تضيف صلاحية الدخول للمجلد (<code>x</code>). هذا الحد الأدنى الآمن.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">chmod 775 للـ storage وbootstrap/cache</div>
+      <div class="line-explain-body">
+        فقط هذين المجلدين يحتاجان للكتابة: Laravel يحتاج يكتب ملفات الـ cache والـ logs والـ sessions. <code>775</code> تعني المالك والمجموعة يكتبان، الآخرون يقرؤون فقط.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># جعل www-data مالك كل الملفات</span>
+<span class="cmd">chown</span> <span class="opt">-R</span> <span class="val">www-data:www-data</span> <span class="path">/var/www/laravel</span>
+
+<span class="cmt"># الصلاحيات الأساسية الآمنة</span>
+<span class="cmd">find</span> <span class="path">/var/www/laravel</span> <span class="opt">-type</span> <span class="val">f</span> <span class="opt">-exec</span> <span class="cmd">chmod</span> <span class="val">644</span> {} \;
+<span class="cmd">find</span> <span class="path">/var/www/laravel</span> <span class="opt">-type</span> <span class="val">d</span> <span class="opt">-exec</span> <span class="cmd">chmod</span> <span class="val">755</span> {} \;
+
+<span class="cmt"># هذين المجلدين فقط يحتاجان صلاحية كتابة</span>
+<span class="cmd">chmod</span> <span class="opt">-R</span> <span class="val">775</span> <span class="path">/var/www/laravel/storage</span>
+<span class="cmd">chmod</span> <span class="opt">-R</span> <span class="val">775</span> <span class="path">/var/www/laravel/bootstrap/cache</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 10 ======================== -->
+  <div class="section" id="s10">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <div>
+        <div class="section-title">تثبيت SSL مجاني مع Certbot</div>
+        <div class="section-desc">HTTPS إلزامي لأي موقع حديث</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">لماذا SSL ضروري؟</div>
+      <div class="explain-text">
+        بدون SSL، كل البيانات بين المستخدم وموقعك (كلمات المرور، البيانات الشخصية) تُرسَل كنص عادي قابل للاعتراض. المتصفحات الحديثة تُظهر "Not Secure" للمواقع بدون HTTPS. Certbot يوفر شهادات SSL مجانية من Let's Encrypt مع تجديد تلقائي.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">certbot --nginx</div>
+      <div class="line-explain-body">
+        Certbot يتعرف على إعدادات Nginx تلقائياً، يحصل على الشهادة، ويُعدّل ملف Nginx لإضافة HTTPS وإعادة التوجيه من HTTP لـ HTTPS. كل هذا تلقائياً!
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">certbot renew --dry-run</div>
+      <div class="line-explain-body">
+        شهادات Let's Encrypt صالحة 90 يوماً فقط. هذا الأمر يختبر عملية التجديد التلقائي دون تجديد فعلي. Certbot يضيف تلقائياً مهمة cron لتجديد الشهادة قبل انتهائها.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># تثبيت Certbot مع plugin الـ Nginx</span>
+<span class="cmd">apt</span> <span class="kw">install</span> <span class="opt">-y</span> <span class="val">certbot python3-certbot-nginx</span>
+
+<span class="cmt"># الحصول على الشهادة وإعداد HTTPS تلقائياً</span>
+<span class="cmt"># استبدل yourdomain.com بدومينك الفعلي</span>
+<span class="cmd">certbot</span> <span class="opt">--nginx</span> <span class="opt">-d</span> <span class="val">yourdomain.com</span> <span class="opt">-d</span> <span class="val">www.yourdomain.com</span>
+
+<span class="cmt"># اختبار التجديد التلقائي</span>
+<span class="cmd">certbot</span> <span class="kw">renew</span> <span class="opt">--dry-run</span>
+
+<span class="cmt"># التحقق من أن timer التجديد يعمل</span>
+<span class="cmd">systemctl</span> <span class="kw">status</span> <span class="val">certbot.timer</span></code></pre>
+    </div>
+
+    <div class="alert success">
+      <span class="alert-icon">✅</span>
+      <div>بعد تثبيت Certbot، سيُعدّل ملف Nginx تلقائياً ويضيف redirect من HTTP لـ HTTPS وإعدادات SSL الكاملة.</div>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 11 ======================== -->
+  <div class="section" id="s11">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <div>
+        <div class="section-title">إعداد Firewall</div>
+        <div class="section-desc">الخط الدفاعي الأول للسيرفر</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">مبدأ أقل الصلاحيات</div>
+      <div class="explain-text">
+        الـ Firewall يعمل بمبدأ "أغلق كل شيء، وافتح ما تحتاجه فقط". نحتاج فقط SSH للإدارة، وHTTP/HTTPS للموقع. أي port آخر مغلق = سطح هجوم أصغر.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">ufw allow 'Nginx Full'</div>
+      <div class="line-explain-body">
+        <code>Nginx Full</code> هو اسم مختصر يفتح كلا الـ port 80 (HTTP) والـ port 443 (HTTPS) دفعة واحدة. يمكنك التحقق من هذه الـ profiles بأمر <code>ufw app list</code>.
+      </div>
+    </div>
+
+    <div class="alert danger">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>تحذير:</strong> تأكد من إضافة OpenSSH قبل تفعيل ufw، وإلا ستُغلق على نفسك باب الدخول للسيرفر!</div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># السماح بـ SSH أولاً - لا تنسَ هذا!</span>
+<span class="cmd">ufw</span> <span class="kw">allow</span> <span class="val">OpenSSH</span>
+
+<span class="cmt"># السماح بـ HTTP (80) و HTTPS (443) معاً</span>
+<span class="cmd">ufw</span> <span class="kw">allow</span> <span class="str">'Nginx Full'</span>
+
+<span class="cmt"># تفعيل الـ Firewall</span>
+<span class="cmd">ufw</span> <span class="kw">enable</span>
+
+<span class="cmt"># التحقق من القواعد المفعّلة</span>
+<span class="cmd">ufw</span> <span class="kw">status</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 12 ======================== -->
+  <div class="section" id="s12">
+    <div class="section-header">
+      <div class="section-num">12</div>
+      <div>
+        <div class="section-title">تثبيت Redis</div>
+        <div class="section-desc">Cache سريع للـ Sessions والبيانات المتكررة</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">لماذا Redis موصى به؟</div>
+      <div class="explain-text">
+        بدون Redis، Laravel يخزّن الـ sessions والـ cache في ملفات. مع Redis، كل شيء في الذاكرة RAM مباشرة، مما يجعل القراءة والكتابة أسرع بـ 10-100 مرة. مهم جداً عند التعامل مع حركة مرور عالية.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">supervised systemd</div>
+      <div class="line-explain-body">
+        يجعل Redis يعمل تحت إشراف systemd. هذا يعني systemd يعيد تشغيل Redis تلقائياً إذا توقف، ويديره كخدمة نظام رسمية.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># تثبيت Redis</span>
+<span class="cmd">apt</span> <span class="kw">install</span> <span class="opt">-y</span> <span class="val">redis-server</span>
+
+<span class="cmt"># فتح ملف الإعدادات</span>
+<span class="cmd">nano</span> <span class="path">/etc/redis/redis.conf</span>
+
+<span class="cmt"># ابحث عن: supervised no</span>
+<span class="cmt"># وغيّرها إلى:</span>
+<span class="prop">supervised</span> <span class="val">systemd</span>   <span class="cmt"># يجعل systemd يدير Redis</span>
+
+<span class="cmt"># إعادة التشغيل بعد التعديل</span>
+<span class="cmd">systemctl</span> <span class="kw">restart</span> <span class="val">redis-server</span>
+<span class="cmd">systemctl</span> <span class="kw">enable</span> <span class="val">redis-server</span>
+
+<span class="cmt"># اختبار Redis - يجب أن يرد: PONG</span>
+<span class="cmd">redis-cli</span> <span class="val">ping</span></code></pre>
+    </div>
+
+    <div class="explain-text" style="margin-top: 16px;">بعد تثبيت Redis، عدّل هذه القيم في ملف <code>.env</code>:</div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">.env — تحديث للـ Redis</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="prop">CACHE_DRIVER</span>=<span class="val">redis</span>              <span class="cmt"># Cache في الذاكرة بدلاً من الملفات</span>
+<span class="prop">SESSION_DRIVER</span>=<span class="val">redis</span>           <span class="cmt"># Sessions في الذاكرة - أسرع</span>
+<span class="prop">REDIS_HOST</span>=<span class="val">127.0.0.1</span>
+<span class="prop">REDIS_PORT</span>=<span class="val">6379</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 13 ======================== -->
+  <div class="section" id="s13">
+    <div class="section-header">
+      <div class="section-num">13</div>
+      <div>
+        <div class="section-title">Supervisor لـ Queue Workers</div>
+        <div class="section-desc">لمعالجة المهام في الخلفية</div>
+      </div>
+    </div>
+
+    <div class="explain-block">
+      <div class="explain-title">ما هو الـ Queue Worker؟</div>
+      <div class="explain-text">
+        بعض المهام تأخذ وقتاً (إرسال الإيميلات، معالجة الصور، التقارير). بدلاً من إبطاء الاستجابة للمستخدم، نضع هذه المهام في "قائمة انتظار" ويعالجها worker في الخلفية. <strong>Supervisor</strong> يضمن أن هذا الـ worker يعمل دائماً ويُعيد تشغيله إذا توقف.
+      </div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">numprocs = 2</div>
+      <div class="line-explain-body">نشغّل عمليتين متوازيتين للـ queue. إذا كان لديك مهام كثيرة يمكن رفعه، لكن كل عملية تأخذ ذاكرة.</div>
+    </div>
+
+    <div class="line-explain">
+      <div class="line-explain-header">--max-time=3600</div>
+      <div class="line-explain-body">
+        نعيد تشغيل الـ worker كل ساعة (3600 ثانية). هذا يمنع تسريب الذاكرة التدريجي في العمليات طويلة الأمد. Supervisor يُعيد تشغيله فوراً بعد توقفه.
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># تثبيت Supervisor</span>
+<span class="cmd">apt</span> <span class="kw">install</span> <span class="opt">-y</span> <span class="val">supervisor</span>
+
+<span class="cmt"># إنشاء ملف إعداد الـ worker</span>
+<span class="cmd">nano</span> <span class="path">/etc/supervisor/conf.d/laravel-worker.conf</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">laravel-worker.conf</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="val">[program:laravel-worker]</span>
+<span class="prop">process_name</span>=<span class="val">%(program_name)s_%(process_num)02d</span>  <span class="cmt">; اسم العملية مع رقمها</span>
+<span class="prop">command</span>=<span class="val">php /var/www/laravel/artisan queue:work --sleep=3 --tries=3 --max-time=3600</span>
+<span class="cmt">; --sleep=3: انتظر 3 ثواني إذا ما في مهام</span>
+<span class="cmt">; --tries=3: حاول 3 مرات قبل تمييز المهمة كفاشلة</span>
+<span class="cmt">; --max-time=3600: أعد التشغيل كل ساعة</span>
+
+<span class="prop">autostart</span>=<span class="val">true</span>                  <span class="cmt">; يبدأ تلقائياً مع Supervisor</span>
+<span class="prop">autorestart</span>=<span class="val">true</span>               <span class="cmt">; يُعيد التشغيل إذا توقف</span>
+<span class="prop">stopasgroup</span>=<span class="val">true</span>
+<span class="prop">killasgroup</span>=<span class="val">true</span>
+<span class="prop">user</span>=<span class="val">www-data</span>                   <span class="cmt">; يشتغل بنفس مستخدم Laravel</span>
+<span class="prop">numprocs</span>=<span class="val">2</span>                      <span class="cmt">; عمليتان متوازيتان</span>
+<span class="prop">redirect_stderr</span>=<span class="val">true</span>
+<span class="prop">stdout_logfile</span>=<span class="path">/var/www/laravel/storage/logs/worker.log</span>
+<span class="prop">stopwaitsecs</span>=<span class="val">3600</span></code></pre>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash — تشغيل Supervisor</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># قراءة الإعدادات الجديدة</span>
+<span class="cmd">supervisorctl</span> <span class="kw">reread</span>
+
+<span class="cmt"># تطبيق التغييرات</span>
+<span class="cmd">supervisorctl</span> <span class="kw">update</span>
+
+<span class="cmt"># تشغيل الـ workers</span>
+<span class="cmd">supervisorctl</span> <span class="kw">start</span> <span class="val">laravel-worker:*</span>
+
+<span class="cmt"># التحقق من حالتهم</span>
+<span class="cmd">supervisorctl</span> <span class="kw">status</span></code></pre>
+    </div>
+  </div>
+
+  <!-- ======================== SECTION 14 ======================== -->
+  <div class="section" id="s14">
+    <div class="section-header">
+      <div class="section-num">14</div>
+      <div>
+        <div class="section-title">التحقق النهائي من كل شيء</div>
+        <div class="section-desc">تأكد أن كل الخدمات تعمل بشكل صحيح</div>
+      </div>
+    </div>
+
+    <div class="code-wrapper">
+      <div class="code-header">
+        <div class="code-header-left">
+          <div class="code-dots"><div class="code-dot dot-red"></div><div class="code-dot dot-yellow"></div><div class="code-dot dot-green"></div></div>
+          <span class="code-lang">bash — فحص حالة الخدمات</span>
+        </div>
+        <button class="copy-btn" onclick="copyCode(this)">نسخ الكود</button>
+      </div>
+      <pre><code class="block"><span class="cmt"># فحص حالة جميع الخدمات - يجب أن تكون active (running)</span>
+<span class="cmd">systemctl</span> <span class="kw">status</span> <span class="val">nginx</span>
+<span class="cmd">systemctl</span> <span class="kw">status</span> <span class="val">php8.3-fpm</span>
+<span class="cmd">systemctl</span> <span class="kw">status</span> <span class="val">mysql</span>
+<span class="cmd">systemctl</span> <span class="kw">status</span> <span class="val">redis-server</span>
+<span class="cmd">systemctl</span> <span class="kw">status</span> <span class="val">supervisor</span>
+
+<span class="cmt"># أو كلها دفعة واحدة</span>
+<span class="cmd">systemctl</span> <span class="kw">status</span> <span class="val">nginx php8.3-fpm mysql redis-server supervisor</span>
+
+<span class="cmt"># اختبار صحة إعدادات Nginx</span>
+<span class="cmd">nginx</span> <span class="opt">-t</span>
+
+<span class="cmt"># اختبار صحة إعدادات PHP-FPM</span>
+<span class="cmd">php-fpm8.3</span> <span class="opt">-t</span>
+
+<span class="cmt"># متابعة أخطاء Nginx الآن</span>
+<span class="cmd">tail</span> <span class="opt">-f</span> <span class="path">/var/log/nginx/laravel_error.log</span>
+
+<span class="cmt"># متابعة أخطاء Laravel الآن</span>
+<span class="cmd">tail</span> <span class="opt">-f</span> <span class="path">/var/www/laravel/storage/logs/laravel.log</span></code></pre>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">💡</span>
+      <div>إذا عدّلت ملف <code>.env</code> أو أي ملف إعداد لاحقاً، شغّل دائماً: <code>php artisan config:cache</code> لتطبيق التغييرات في وضع الإنتاج.</div>
+    </div>
+
+    <!-- Summary -->
+    <div style="margin-top: 40px; padding: 30px; background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;">
+      <div style="font-size: 16px; font-weight: 700; color: var(--gold); margin-bottom: 20px;">🏗️ البنية النهائية للسيرفر</div>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="summary-icon">🌐</div>
+          <div>
+            <div class="summary-name">Nginx</div>
+            <div class="summary-desc">يستقبل الطلبات ويوزّعها</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">⚡</div>
+          <div>
+            <div class="summary-name">PHP-FPM 8.3</div>
+            <div class="summary-desc">يعالج كود Laravel</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">🗄️</div>
+          <div>
+            <div class="summary-name">MySQL 8.0</div>
+            <div class="summary-desc">قاعدة البيانات الرئيسية</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">🔴</div>
+          <div>
+            <div class="summary-name">Redis</div>
+            <div class="summary-desc">Cache وSessions سريعة</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">⚙️</div>
+          <div>
+            <div class="summary-name">Supervisor</div>
+            <div class="summary-desc">Queue Workers دائمة التشغيل</div>
+          </div>
+        </div>
+        <div class="summary-card">
+          <div class="summary-icon">🔒</div>
+          <div>
+            <div class="summary-name">SSL + UFW</div>
+            <div class="summary-desc">HTTPS وحماية Firewall</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function copyCode(btn) {
+  const pre = btn.closest('.code-wrapper').querySelector('pre');
+  const text = pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ تم النسخ!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'نسخ الكود';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+</script>
+</body>
+</html>
